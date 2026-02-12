@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My History | LIBRA CORE</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-electric: #6366f1;
+            --main-bg: #f8fafc;
+            --indigo-soft: #eef2ff;
+            --success-green: #10b981;
+            --danger-red: #ef4444;
+        }
+
+        body { background-color: var(--main-bg); font-family: 'Inter', sans-serif; display: flex; margin: 0; min-height: 100vh; overflow-x: hidden; }
+
+        /* Sidebar Desktop */
+        .sidebar { width: 280px; background: white; border-right: 1px solid #f1f5f9; padding: 2rem 1.5rem; position: fixed; height: 100vh; z-index: 1000; transition: all 0.3s ease; }
+        .sidebar-brand { font-size: 1.5rem; font-weight: 800; color: var(--primary-electric); margin-bottom: 3rem; display: flex; align-items: center; }
+        .nav-link { color: #64748b; font-weight: 500; padding: 0.8rem 1rem; border-radius: 12px; transition: 0.3s; text-decoration: none; display: flex; align-items: center; margin-bottom: 0.5rem;}
+        .nav-link:hover { background: #f8fafc; color: var(--primary-electric); }
+        .nav-link.active { background: #6366f110; color: var(--primary-electric); }
+
+        .main-content { margin-left: 280px; width: calc(100% - 280px); padding: 3rem; transition: all 0.3s ease; }
+
+        /* Mobile Adjustments */
+        .mobile-header { display: none; }
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 999; }
+
+        @media (max-width: 992px) {
+            .sidebar { left: -280px; }
+            .sidebar.active { left: 0; }
+            .main-content { margin-left: 0; width: 100%; padding: 1.5rem; }
+            .mobile-header { display: flex; align-items: center; gap: 10px; margin-bottom: 2rem; }
+            .mobile-menu-btn { background: white; border: 1px solid #e2e8f0; padding: 8px 15px; border-radius: 10px; color: var(--primary-electric); font-weight: 600; }
+            .sidebar-overlay.active { display: block; }
+            header { flex-direction: column; align-items: flex-start !important; gap: 1rem; }
+            .search-container.active { width: 100%; }
+        }
+
+        /* Search Animation Design */
+        .search-container {
+            display: flex; align-items: center; background: white; padding: 8px 15px;
+            border-radius: 12px; transition: all 0.4s ease; width: 45px; overflow: hidden;
+            border: 1px solid #f1f5f9; cursor: pointer; height: 45px;
+        }
+        .search-container.active { width: 280px; border-color: var(--primary-electric); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1); }
+        .search-container input { border: none; background: none; outline: none; margin-left: 10px; width: 0; transition: all 0.4s ease; font-size: 0.9rem; }
+        .search-container.active input { width: 100%; }
+
+        /* Modern Table Styling */
+        .table-container {
+            background: white; border-radius: 24px; border: 1px solid #f1f5f9;
+            padding: 1.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.04);
+        }
+
+        .custom-table { border-collapse: separate; border-spacing: 0 8px; width: 100%; margin-bottom: 0; min-width: 600px; }
+        .custom-table thead th { border: none; color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 1rem; }
+        .custom-table tbody tr { background: white; transition: all 0.2s ease; }
+        .custom-table tbody tr:hover { transform: scale(1.005); box-shadow: 0 4px 12px rgba(0,0,0,0.05); background: #fafaff; }
+        .custom-table td { border: none; padding: 1.2rem 1rem; }
+        .custom-table td:first-child { border-radius: 12px 0 0 12px; }
+        .custom-table td:last-child { border-radius: 0 12px 12px 0; }
+
+        .book-avatar { width: 40px; height: 40px; background: var(--indigo-soft); color: var(--primary-electric); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .status-badge { font-size: 0.7rem; font-weight: 700; padding: 0.5rem 1rem; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px; }
+        .status-reading { background: #fff7ed; color: #9a3412; }
+        .status-done { background: #f0fdf4; color: #166534; }
+
+        .date-text { font-size: 0.85rem; font-weight: 500; color: #475569; }
+        .late-text { color: var(--danger-red); font-weight: 700; background: #fef2f2; padding: 2px 6px; border-radius: 4px; }
+
+        .row-reading { border-left: 4px solid #ea580c !important; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <i class="fa fa-bolt me-2"></i>  BOOK CORE
+        <button class="btn d-lg-none ms-auto text-muted" onclick="toggleSidebar()"><i class="fa fa-times"></i></button>
+    </div>
+    <nav class="nav flex-column">
+        <a class="nav-link" th:href="@{/user/dashboard}"><i class="fa fa-book me-3"></i>Reserve Book</a>
+        <a class="nav-link active" th:href="@{/user/history}"><i class="fa fa-history me-3"></i>My History</a>
+        <hr class="my-4 opacity-25">
+        <form th:action="@{/logout}" method="post">
+            <button type="submit" class="nav-link text-danger border-0 bg-transparent w-100 text-start">
+                <i class="fa fa-sign-out-alt me-3"></i>Log out
+            </button>
+        </form>
+    </nav>
+</aside>
+
+<main class="main-content">
+    <div class="mobile-header">
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">
+            <i class="fa fa-bars"></i> Menu
+        </button>
+    </div>
+
+    <header class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="h3 fw-bold mb-1">Borrowing History</h1>
+            <p class="text-muted small">Active books are displayed at the top of the list.</p>
+        </div>
+
+        <div class="search-container" id="searchWrapper" onclick="toggleSearch()">
+            <i class="fa fa-search text-primary"></i>
+            <input type="text" id="historySearch" placeholder="Search title or author..." onkeyup="doSearch()" onblur="closeSearch()">
+        </div>
+    </header>
+
+    <div class="table-container">
+        <div class="table-responsive" style="overflow-x: auto;">
+            <table class="custom-table" id="historyTable">
+                <thead>
+                <tr>
+                    <th>Book & Author</th>
+                    <th>Borrow Date</th>
+                    <th>Deadline (Planned)</th>
+                    <th>Returned (Actual)</th>
+                    <th class="text-end">Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="l : ${myLendings}" th:if="${!l.returned}" class="row-reading">
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="book-avatar me-3">
+                                <i class="fa fa-book-reader text-warning"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold text-dark row-title" th:text="${l.book.title}"></div>
+                                <div class="text-muted small row-author" th:text="${l.book.author.name}"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="date-text">
+                            <i class="fa fa-calendar-alt me-2 text-muted"></i>
+                            <span th:text="${#temporals.format(l.borrowDate, 'dd/MM/yyyy')}"></span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="date-text" th:classappend="${T(java.time.LocalDate).now().isAfter(l.returnDate) ? 'late-text' : ''}">
+                            <i class="fa fa-clock me-2 text-muted"></i>
+                            <span th:text="${#temporals.format(l.returnDate, 'dd/MM/yyyy')}"></span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="text-muted small italic">Still in hand...</span>
+                    </td>
+                    <td class="text-end">
+                        <span class="status-badge status-reading">
+                            <i class="fa fa-glasses"></i> Reading
+                        </span>
+                    </td>
+                </tr>
+
+                <tr th:each="l : ${myLendings}" th:if="${l.returned}">
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="book-avatar me-3">
+                                <i class="fa fa-book"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold text-dark row-title" th:text="${l.book.title}"></div>
+                                <div class="text-muted small row-author" th:text="${l.book.author.name}"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="date-text">
+                            <i class="fa fa-calendar-alt me-2 text-muted"></i>
+                            <span th:text="${#temporals.format(l.borrowDate, 'dd/MM/yyyy')}"></span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="date-text text-muted opacity-50">
+                            <i class="fa fa-clock me-2"></i>
+                            <span th:text="${#temporals.format(l.returnDate, 'dd/MM/yyyy')}"></span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="fw-bold text-success" style="font-size: 0.85rem;">
+                            <i class="fa fa-calendar-check me-2"></i>
+                            <span th:text="${#temporals.format(l.actualReturnDate, 'dd/MM/yyyy')}"></span>
+                        </div>
+                    </td>
+                    <td class="text-end">
+                        <span class="status-badge status-done">
+                            <i class="fa fa-check-circle"></i> Returned
+                        </span>
+                    </td>
+                </tr>
+
+                <tr id="emptySearchRow" style="display: none;">
+                    <td colspan="5" class="text-center py-5 text-muted small">No results found for this search.</td>
+                </tr>
+
+                <tr th:if="${#lists.isEmpty(myLendings)}">
+                    <td colspan="5" class="text-center py-5">
+                        <i class="fa fa-folder-open d-block mb-3 text-muted" style="font-size: 2rem;"></i>
+                        <span class="text-muted">You have no books in your history.</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<script>
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('active');
+        document.getElementById('sidebarOverlay').classList.toggle('active');
+    }
+
+    function toggleSearch() {
+        const wrapper = document.getElementById('searchWrapper');
+        const input = document.getElementById('historySearch');
+        wrapper.classList.add('active');
+        input.focus();
+    }
+
+    function closeSearch() {
+        const wrapper = document.getElementById('searchWrapper');
+        const input = document.getElementById('historySearch');
+        if (input.value === "") {
+            wrapper.classList.remove('active');
+        }
+    }
+
+    function doSearch() {
+        const input = document.getElementById('historySearch');
+        const filter = input.value.toLowerCase();
+        const table = document.getElementById('historyTable');
+        const tr = table.getElementsByTagName('tr');
+        const emptyRow = document.getElementById('emptySearchRow');
+        let found = false;
+
+        for (let i = 1; i < tr.length; i++) {
+            if (tr[i].id === 'emptySearchRow') continue;
+
+            const titleEl = tr[i].getElementsByClassName('row-title')[0];
+            const authorEl = tr[i].getElementsByClassName('row-author')[0];
+
+            if (titleEl || authorEl) {
+                const titleText = titleEl.textContent || titleEl.innerText;
+                const authorText = authorEl.textContent || authorEl.innerText;
+
+                if (titleText.toLowerCase().indexOf(filter) > -1 || authorText.toLowerCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                    found = true;
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+        emptyRow.style.display = found ? "none" : "";
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users | LIBRA CORE</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-electric: #6366f1;
+            --main-bg: #f8fafc;
+            --success-green: #10b981;
+            --danger-red: #ef4444;
+            --indigo-soft: #eef2ff;
+        }
+
+        body { background-color: var(--main-bg); font-family: 'Inter', sans-serif; display: flex; min-height: 100vh; margin: 0; overflow-x: hidden; }
+
+        /* SIDEBAR DESKTOP */
+        .sidebar { width: 280px; background: white; border-right: 1px solid #f1f5f9; padding: 2rem 1.5rem; position: fixed; height: 100vh; z-index: 1000; transition: all 0.3s ease; }
+        .sidebar-brand { font-size: 1.5rem; font-weight: 800; color: var(--primary-electric); margin-bottom: 3rem; display: flex; align-items: center; }
+        .nav-link { color: #64748b; font-weight: 500; padding: 0.8rem 1rem; border-radius: 12px; transition: all 0.3s; margin-bottom: 0.5rem; display: flex; align-items: center; text-decoration: none; }
+        .nav-link:hover { background: #f1f5f9; color: var(--primary-electric); }
+        .nav-link.active { background: #6366f110; color: var(--primary-electric); }
+
+        .main-content { margin-left: 280px; width: calc(100% - 280px); padding: 3rem; transition: all 0.3s ease; }
+
+        /* MOBILE ELEMENTS */
+        .mobile-menu-btn {
+            display: none;
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: 8px 15px;
+            border-radius: 10px;
+            color: var(--primary-electric);
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            z-index: 999;
+        }
+
+        @media (max-width: 992px) {
+            .sidebar { left: -280px; }
+            .sidebar.active { left: 0; }
+            .main-content { margin-left: 0; width: 100%; padding: 1.5rem; }
+            .mobile-menu-btn { display: inline-flex; align-items: center; gap: 8px; }
+            .sidebar-overlay.active { display: block; }
+            header { flex-direction: column; align-items: flex-start !important; gap: 1rem; }
+            header .d-flex { width: 100%; justify-content: space-between; }
+        }
+
+        /* Stat Cards */
+        .stat-card { background: white; padding: 1.5rem; border-radius: 24px; border: 1px solid #f1f5f9; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.02); transition: 0.3s; height: 100%; }
+        .icon-box { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; background: var(--indigo-soft); color: var(--primary-electric); }
+
+        /* Search Bar */
+        .search-wrapper { position: relative; display: flex; align-items: center; justify-content: flex-end; min-width: 40px; }
+        .search-input {
+            width: 0; opacity: 0; visibility: hidden;
+            transform: translateX(20px);
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-radius: 30px; border: 1px solid #e2e8f0;
+            padding: 8px 15px 8px 40px; outline: none; background: white;
+        }
+        .search-input.active { width: 180px; opacity: 1; visibility: visible; transform: translateX(0); }
+        @media (min-width: 768px) { .search-input.active { width: 250px; } }
+
+        .search-btn {
+            position: absolute; right: 0; background: white; border: 1px solid #f1f5f9;
+            width: 40px; height: 40px; border-radius: 50%; color: var(--primary-electric);
+            cursor: pointer; z-index: 10; transition: 0.4s ease; display: flex; align-items: center; justify-content: center;
+        }
+        .search-input.active ~ .search-btn { opacity: 0; pointer-events: none; }
+        .search-icon-inside { position: absolute; left: 15px; color: #94a3b8; display: none; z-index: 11; }
+        .search-input.active + .search-icon-inside { display: block; }
+
+        /* Table Responsive Tweaks */
+        .table-container { background: white; border-radius: 24px; border: 1px solid #f1f5f9; padding: 1.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.04); }
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .custom-table { border-collapse: separate; border-spacing: 0 8px; width: 100%; min-width: 700px; } /* Ensures scroll on mobile */
+        .custom-table td { border: none; padding: 1.2rem 1rem; vertical-align: middle; background: white; }
+        .user-avatar { width: 38px; height: 38px; background: var(--indigo-soft); color: var(--primary-electric); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 12px; }
+
+        .badge-role { background: var(--indigo-soft); color: var(--primary-electric); padding: 4px 10px; border-radius: 8px; font-weight: 600; font-size: 0.75rem; }
+        .status-badge { padding: 4px 12px; border-radius: 8px; font-weight: 600; font-size: 0.75rem; display: inline-flex; align-items: center; }
+        .status-active { background: #ecfdf5; color: #10b981; }
+        .status-expired { background: #fef2f2; color: #ef4444; }
+
+        .btn-add { background: var(--primary-electric); color: white; border-radius: 12px; padding: 0.7rem 1.5rem; border: none; font-weight: 600; transition: 0.3s; text-decoration: none; }
+        .modal-content { border-radius: 24px; border: none; padding: 1rem; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <i class="fa fa-bolt me-2"></i> BOOK CORE
+        <button class="btn d-lg-none ms-auto text-muted" onclick="toggleSidebar()"><i class="fa fa-times"></i></button>
+    </div>
+    <nav class="nav flex-column">
+        <a class="nav-link" th:href="@{/}"><i class="fa fa-home me-3"></i>Dashboard</a>
+        <a class="nav-link" th:href="@{/books}"><i class="fa fa-book me-3"></i>Books</a>
+        <a class="nav-link" th:href="@{/authors}"><i class="fa fa-pen me-3"></i>Authors</a>
+        <a class="nav-link" th:href="@{/lendings}"><i class="fa fa-exchange-alt me-3"></i>Lendings</a>
+        <a class="nav-link active" th:href="@{/admin/dashboard}"><i class="fa fa-users me-3"></i>Users</a>
+        <hr class="my-4 opacity-25">
+        <form th:action="@{/logout}" method="post">
+            <button type="submit" class="nav-link text-danger border-0 bg-transparent w-100 text-start">
+                <i class="fa fa-sign-out-alt me-3"></i>Log out
+            </button>
+        </form>
+    </nav>
+</aside>
+
+<main class="main-content">
+    <button class="mobile-menu-btn" onclick="toggleSidebar()">
+        <i class="fa fa-bars"></i> Menu
+    </button>
+
+    <header class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="h3 fw-bold mb-1">Users</h1>
+            <p class="text-muted small">Manage accounts and subscriptions.</p>
+        </div>
+
+        <div class="d-flex align-items-center">
+            <div class="search-wrapper me-2" id="searchContainer">
+                <input type="text" id="tableSearch" class="search-input" placeholder="Search..." onkeyup="filterUsers()">
+                <i class="fa fa-search search-icon-inside"></i>
+                <button class="search-btn" onclick="toggleSearch(event)"><i class="fa fa-search"></i></button>
+            </div>
+            <a th:href="@{/users/add}" class="btn btn-add shadow-sm"><i class="fa fa-user-plus me-1"></i> Add</a>
+        </div>
+    </header>
+
+    <div class="row g-3 mb-5">
+        <div class="col-6 col-md-4">
+            <div class="stat-card">
+                <div class="icon-box"><i class="fa fa-users"></i></div>
+                <div class="text-muted small fw-bold">TOTAL</div>
+                <h4 class="fw-bold mb-0" th:text="${totalUsers}">0</h4>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 d-none d-md-block">
+            <div class="stat-card">
+                <div class="icon-box"><i class="fa fa-shield-alt"></i></div>
+                <div class="text-muted small fw-bold">SYSTEM</div>
+                <h4 class="fw-bold mb-0 text-success">Online</h4>
+            </div>
+        </div>
+        <div class="col-6 col-md-4">
+            <div class="stat-card">
+                <div class="icon-box"><i class="fa fa-calendar-check"></i></div>
+                <div class="text-muted small fw-bold">ACTIVE</div>
+                <h4 class="fw-bold mb-0" th:text="${users.size()}">0</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <div class="table-responsive">
+            <table class="custom-table" id="userTable">
+                <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Role</th>
+                    <th>Registered</th> <th>Expiry</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+                </thead>
+                <tbody id="userBody">
+                <tr th:each="user : ${users}" class="user-row" th:data-role="${user.role}">
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="user-avatar" th:text="${#strings.substring(user.username, 0, 1).toUpperCase()}">U</div>
+                            <div>
+                                <span class="fw-bold text-dark d-block" th:text="${user.username}"></span>
+                                <span class="text-muted small d-none d-md-block" th:text="'#' + ${user.id}"></span>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="badge-role" th:text="${user.role}">USER</span></td>
+                    <td>
+                        <span class="text-muted small" th:text="${user.registrationDate != null ? user.registrationDate : '---'}"></span>
+                    </td>
+                    <td>
+                        <span class="text-dark fw-medium small" th:text="${user.role == 'ADMIN' ? '∞ No Limit' : user.expiryDate}">---</span>
+                    </td>
+                    <td>
+                        <span th:if="${user.role == 'ADMIN' || (user.expiryDate != null && T(java.time.LocalDate).now().isBefore(user.expiryDate))}" class="status-badge status-active">
+                             Active
+                        </span>
+                        <span th:if="${user.role != 'ADMIN' && user.expiryDate != null && T(java.time.LocalDate).now().isAfter(user.expiryDate)}" class="status-badge status-expired">
+                             Expired
+                        </span>
+                    </td>
+                    <td class="text-end">
+                        <div class="d-flex justify-content-end gap-1">
+                            <button type="button" class="btn btn-sm btn-light border rounded-pill px-2"
+                                    th:onclick="openEditModal([[${user.id}]], [[${user.username}]], [[${user.role}]], [[${user.expiryDate}]], [[${user.registrationDate}]])">
+                                <i class="fa fa-edit text-primary"></i>
+                            </button>
+                            <a th:href="@{/users/delete/{id}(id=${user.id})}" class="btn btn-sm btn-light border rounded-pill px-2" onclick="return confirm('Are you sure?')">
+                                <i class="fa fa-trash text-danger"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold"><i class="fa fa-user-edit me-2 text-primary"></i>Edit</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form th:action="@{/users/update}" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="editUserId">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Username</label>
+                        <input type="text" name="username" id="editUsername" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Role</label>
+                        <select name="role" id="editRole" class="form-select">
+                            <option value="USER">USER</option>
+                            <option value="ADMIN">ADMIN</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">Registered On</label>
+                        <input type="text" id="editRegDate" class="form-control bg-light" disabled>
+                    </div>
+                    <div class="mb-3" id="expiryFieldContainer">
+                        <label class="form-label small fw-bold">Expiry Date</label>
+                        <input type="date" name="expiryDate" id="editExpiryDate" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-add px-4 shadow-sm">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Logic to sort ADMIN to top on load
+    document.addEventListener('DOMContentLoaded', function() {
+        const tbody = document.getElementById('userBody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+
+        rows.sort((a, b) => {
+            const roleA = a.getAttribute('data-role');
+            const roleB = b.getAttribute('data-role');
+            if (roleA === 'ADMIN' && roleB !== 'ADMIN') return -1;
+            if (roleA !== 'ADMIN' && roleB === 'ADMIN') return 1;
+            return 0;
+        });
+
+        rows.forEach(row => tbody.appendChild(row));
+    });
+
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('active');
+        document.getElementById('sidebarOverlay').classList.toggle('active');
+    }
+
+    function toggleSearch(event) {
+        event.stopPropagation();
+        const input = document.getElementById('tableSearch');
+        input.classList.add('active');
+        input.focus();
+    }
+
+    document.addEventListener('click', function(event) {
+        const container = document.getElementById('searchContainer');
+        const input = document.getElementById('tableSearch');
+        if (container && !container.contains(event.target)) {
+            input.classList.remove('active');
+        }
+    });
+
+    function filterUsers() {
+        const query = document.getElementById('tableSearch').value.toLowerCase();
+        const rows = document.querySelectorAll('#userBody tr');
+        rows.forEach(row => {
+            row.style.display = row.innerText.toLowerCase().includes(query) ? "" : "none";
+        });
+    }
+
+    function openEditModal(id, username, role, expiryDate, regDate) {
+        document.getElementById('editUserId').value = id;
+        document.getElementById('editUsername').value = username;
+        document.getElementById('editRole').value = role;
+        document.getElementById('editExpiryDate').value = expiryDate || '';
+        document.getElementById('editRegDate').value = regDate || 'N/A';
+        document.getElementById('expiryFieldContainer').style.display = (role === 'ADMIN') ? 'none' : 'block';
+        new bootstrap.Modal(document.getElementById('editUserModal')).show();
+    }
+
+    document.getElementById('editRole').addEventListener('change', function() {
+        document.getElementById('expiryFieldContainer').style.display = (this.value === 'ADMIN') ? 'none' : 'block';
+    });
+</script>
+</body>
+</html>

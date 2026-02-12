@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | LIBRA CORE</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-electric: #6366f1;
+            --main-bg: #f8fafc;
+            --text-muted: #64748b;
+        }
+
+        body { background-color: var(--main-bg); font-family: 'Inter', sans-serif; display: flex; min-height: 100vh; margin: 0; }
+
+        /* Sidebar Styles */
+        .sidebar { width: 280px; background: white; border-right: 1px solid #f1f5f9; padding: 2rem 1.5rem; position: fixed; height: 100vh; z-index: 1000; transition: all 0.3s ease; }
+        .sidebar-brand { font-size: 1.5rem; font-weight: 800; color: var(--primary-electric); margin-bottom: 3rem; display: flex; align-items: center; }
+        .nav-link { color: #64748b; font-weight: 500; padding: 0.8rem 1rem; border-radius: 12px; transition: all 0.3s; margin-bottom: 0.5rem; display: flex; align-items: center; text-decoration: none; }
+        .nav-link:hover { background: #f1f5f9; color: var(--primary-electric); }
+        .nav-link.active { background: #6366f110; color: var(--primary-electric); }
+
+        /* Main Content */
+        .main-content { margin-left: 280px; width: calc(100% - 280px); padding: 3rem; transition: all 0.3s ease; }
+
+        /* Mobile Menu Button */
+        .mobile-nav-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1100;
+            background: var(--primary-electric);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Overlay for mobile */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            z-index: 999;
+        }
+
+        /* Stats & Cards */
+        .stat-card { background: white; padding: 1.5rem; border-radius: 20px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); height: 100%; transition: transform 0.3s; }
+        .icon-box { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; background: #6366f115; color: var(--primary-electric); }
+
+        .content-card { background: white; border-radius: 24px; border: 1px solid #f1f5f9; padding: 1.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.04); }
+        .table thead th { background: #f8fafc; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); padding: 1rem; border-bottom: 1px solid #f1f5f9; }
+        .avatar-circle { width: 35px; height: 35px; background: #6366f110; color: var(--primary-electric); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; }
+        .role-badge { font-size: 0.7rem; font-weight: 700; padding: 0.4rem 0.8rem; border-radius: 8px; }
+        .badge-admin { background: #eef2ff; color: #4338ca; }
+        .badge-user { background: #f0fdf4; color: #166534; }
+        .btn-delete-new { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; transition: 0.2s; border: 1px solid #f1f5f9; background: white; color: #ef4444; }
+        .btn-delete-new:hover { background: #fef2f2; border-color: #fee2e2; }
+        .search-container { display: none; margin-left: 15px; animation: fadeIn 0.3s ease; }
+        .search-input { border: 1px solid #e2e8f0; border-radius: 8px; padding: 4px 12px; font-size: 0.85rem; outline: none; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+
+        .bg-light-hover { transition: all 0.3s ease; border: 1px solid #f1f5f9 !important; text-decoration: none; }
+        .bg-light-hover:hover { background-color: #ffffff !important; border-color: var(--primary-electric) !important; transform: translateY(-5px); box-shadow: 0 10px 20px rgba(99, 102, 241, 0.1); }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 991.98px) {
+            .sidebar { left: -280px; }
+            .sidebar.show { left: 0; }
+            .main-content { margin-left: 0; width: 100%; padding: 1.5rem; padding-top: 5rem; }
+            .mobile-nav-toggle { display: block; }
+            .sidebar-overlay.show { display: block; }
+        }
+    </style>
+</head>
+<body>
+
+<th:block sec:authorize="hasRole('ADMIN')">
+    <button class="mobile-nav-toggle" onclick="toggleSidebar()">
+        <i class="fa fa-bars"></i> Menu
+    </button>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand"><i class="fa fa-bolt me-2"></i> BOOK CORE</div>
+        <nav class="nav flex-column">
+            <a class="nav-link active" th:href="@{/}"><i class="fa fa-home me-3"></i>Dashboard</a>
+            <a class="nav-link" th:href="@{/books}"><i class="fa fa-book me-3"></i>Books</a>
+            <a class="nav-link" th:href="@{/authors}"><i class="fa fa-pen me-3"></i>Authors</a>
+            <a class="nav-link" th:href="@{/lendings}"><i class="fa fa-exchange-alt me-3"></i>Lendings</a>
+            <a class="nav-link" th:href="@{/admin/dashboard}"><i class="fa fa-users me-3"></i>Users</a>
+            <hr class="my-4 opacity-25">
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="nav-link text-danger border-0 bg-transparent w-100 text-start">
+                    <i class="fa fa-sign-out-alt me-3"></i>Log out
+                </button>
+            </form>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-3">
+            <div>
+                <h1 class="h3 fw-bold mb-1">Welcome back!</h1>
+                <p class="text-muted small">This is the current state of your library.</p>
+            </div>
+            <a th:href="@{/books/add}" class="btn shadow-sm fw-bold px-4 py-2 rounded-3" style="background: var(--primary-electric); color: white; width: fit-content;">
+                <i class="fa fa-plus me-2"></i>Add new book
+            </a>
+        </header>
+
+        <div class="row g-4 mb-5">
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="icon-box"><i class="fa fa-book"></i></div>
+                    <div class="text-muted small fw-bold text-uppercase">Total Books</div>
+                    <h2 class="fw-bold mb-0" th:text="${totalBooks}">0</h2>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="icon-box" style="color: #db2777; background: #fdf2f8;"><i class="fa fa-pen"></i></div>
+                    <div class="text-muted small fw-bold text-uppercase">Authors</div>
+                    <h2 class="fw-bold mb-0" th:text="${totalAuthors}">0</h2>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="icon-box" style="color: #16a34a; background: #f0fdf4;"><i class="fa fa-exchange-alt"></i></div>
+                    <div class="text-muted small fw-bold text-uppercase">Active Lendings</div>
+                    <h2 class="fw-bold mb-0" th:text="${activeLendings}">0</h2>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="icon-box" style="color: #ea580c; background: #fff7ed;"><i class="fa fa-users"></i></div>
+                    <div class="text-muted small fw-bold text-uppercase">Users</div>
+                    <h2 class="fw-bold mb-0" th:text="${totalUsers}">0</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-card mb-5">
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-4 px-2 gap-3">
+                <h5 class="fw-bold mb-0 d-flex align-items-center">
+                    <i class="fa fa-user-shield text-primary me-2"></i> User Management
+                    <i class="fa fa-search ms-3 text-muted" style="cursor:pointer; font-size: 0.9rem;" onclick="toggleSearch()"></i>
+                    <div id="searchWrapper" class="search-container">
+                        <input type="text" id="userSearchInput" onkeyup="searchUsers()" class="search-input" placeholder="Search...">
+                    </div>
+                </h5>
+                <a th:href="@{/users/add}" class="btn btn-sm btn-light border fw-bold px-3 rounded-pill text-primary" style="width: fit-content;">
+                    <i class="fa fa-plus me-1"></i>Add User
+                </a>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle" id="userTable">
+                    <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Role</th>
+                        <th>Registered</th>
+                        <th>Expiry</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="user : ${users}">
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-circle me-3">
+                                    <span th:text="${#strings.substring(user.username, 0, 1).toUpperCase()}"></span>
+                                </div>
+                                <span class="fw-semibold text-dark" th:text="${user.username}"></span>
+                            </div>
+                        </td>
+                        <td>
+                            <span th:class="${user.role == 'ADMIN' ? 'role-badge badge-admin' : 'role-badge badge-user'}" th:text="${user.role}"></span>
+                        </td>
+                        <td class="text-muted small" th:text="${user.registrationDate}"></td>
+                        <td>
+                            <span th:if="${user.role == 'ADMIN'}" class="text-muted small">∞ No limit</span>
+                            <span th:unless="${user.role == 'ADMIN'}" class="text-muted small" th:text="${user.expiryDate}"></span>
+                        </td>
+                        <td class="text-end">
+                            <a th:href="@{/users/delete/{id}(id=${user.id})}" class="btn-delete-new" onclick="return confirm('Are you sure?')">
+                                <i class="fa fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <h5 class="fw-bold mb-4"><i class="fa fa-bolt text-warning me-2"></i> Quick Actions</h5>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <a th:href="@{/books/add}" class="d-flex align-items-center p-3 rounded-4 bg-light-hover h-100">
+                    <div class="icon-box bg-success-subtle text-success me-3 mb-0"><i class="fa fa-book-medical"></i></div>
+                    <div><div class="fw-bold text-dark">Add book</div><div class="small text-muted">Register title</div></div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a th:href="@{/authors/add}" class="d-flex align-items-center p-3 rounded-4 bg-light-hover h-100">
+                    <div class="icon-box bg-primary-subtle text-primary me-3 mb-0"><i class="fa fa-user-plus"></i></div>
+                    <div><div class="fw-bold text-dark">Add author</div><div class="small text-muted">Register writer</div></div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a th:href="@{/lendings}" class="d-flex align-items-center p-3 rounded-4 bg-light-hover h-100">
+                    <div class="icon-box me-3 mb-0" style="background:#f3e8ff; color:#a855f7;"><i class="fa fa-exchange-alt"></i></div>
+                    <div><div class="fw-bold text-dark">Register lending</div><div class="small text-muted">Lend a book</div></div>
+                </a>
+            </div>
+        </div>
+    </main>
+</th:block>
+
+<th:block sec:authorize="!hasRole('ADMIN')">
+    <div style="height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center; background: white;">
+        <div style="text-align: center; padding: 20px;">
+            <i class="fa fa-lock" style="font-size: 5rem; color: #ef4444; margin-bottom: 2rem;"></i>
+            <h1 style="font-weight: 800; color: #1e293b;">403 - Access Forbidden</h1>
+            <p style="color: #64748b;">You do not have authorization to view this page.</p>
+            <a th:href="@{/}" style="color: var(--primary-electric); font-weight: 600; text-decoration: none;">Back to Dashboard</a>
+        </div>
+    </div>
+</th:block>
+
+<script>
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('show');
+        document.getElementById('sidebarOverlay').classList.toggle('show');
+    }
+
+    function toggleSearch() {
+        const w = document.getElementById('searchWrapper');
+        w.style.display = (w.style.display === 'block') ? 'none' : 'block';
+        if(w.style.display === 'block') document.getElementById('userSearchInput').focus();
+    }
+
+    function searchUsers() {
+        let input = document.getElementById('userSearchInput').value.toLowerCase();
+        let rows = document.getElementById('userTable').getElementsByTagName('tr');
+        for (let i = 1; i < rows.length; i++) {
+            let text = rows[i].getElementsByTagName('td')[0].textContent.toLowerCase();
+            rows[i].style.display = text.includes(input) ? "" : "none";
+        }
+    }
+</script>
+</body>
+</html>

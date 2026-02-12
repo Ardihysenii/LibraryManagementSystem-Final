@@ -1,0 +1,193 @@
+:root {
+    --main-blue: #0061ff;
+    --bg-light: #f8f9fc;
+    --text-dark: #2d3748;
+    --text-muted: #718096;
+    --sidebar-width: 260px;
+}
+
+body {
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    letter-spacing: -0.02em;
+}
+
+
+.sidebar {
+    width: var(--sidebar-width);
+    height: 100vh;
+    position: fixed;
+    background: #ffffff;
+    border-right: 1px solid #e2e8f0;
+    padding: 1.5rem;
+}
+
+.sidebar-brand {
+    color: var(--main-blue);
+    font-weight: 800;
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+}
+
+.nav-link {
+    color: var(--text-muted);
+    font-weight: 500;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s;
+}
+
+.nav-link:hover, .nav-link.active {
+    background: #f0f7ff;
+    color: var(--main-blue);
+}
+
+
+.main-content {
+    margin-left: var(--sidebar-width);
+    padding: 3rem;
+}
+
+.stat-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.icon-box {
+    width: 48px;
+    height: 48px;
+    background: #f0f7ff;
+    color: var(--main-blue);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.btn-primary-electric {
+    background: var(--main-blue);
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: opacity 0.2s;
+}
+
+.btn-primary-electric:hover {
+    opacity: 0.9;
+    color: white;
+}
+
+.btn-primary-electric:hover {
+    background-color: #0052d9 !important;
+    box-shadow: 0 8px 15px rgba(0, 97, 255, 0.2);
+    transform: translateY(-1px);
+    color: white !important;
+}
+
+
+.btn-light.border:hover {
+    background-color: #f0f7ff !important;
+    border-color: var(--main-blue) !important;
+    color: var(--main-blue) !important;
+}
+
+
+.table .btn-light:hover {
+    background-color: #f8f9fa !important;
+    transform: scale(1.05);
+}
+
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    padding: 0.6rem 1rem;
+    transition: all 0.2s;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--main-blue);
+    box-shadow: 0 0 0 3px rgba(0, 97, 255, 0.1);
+}
+
+.card-form {
+    max-width: 600px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+
+.btn-success, .btn-primary {
+    background-color: var(--main-blue) !important;
+    border-color: var(--main-blue) !important;
+    color: white !important;
+}
+
+.btn-success:hover, .btn-primary:hover {
+    background-color: #0052d9 !important;
+    border-color: #0052d9 !important;
+    box-shadow: 0 4px 12px rgba(0, 97, 255, 0.3);
+}
+
+input, select {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+}
+
+input:focus, select:focus {
+    outline: none !important;
+    border-color: var(--main-blue) !important;
+    box-shadow: 0 0 0 3px rgba(0, 97, 255, 0.1) !important;
+}
+
+
+input.form-control, select.form-select {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 10px 15px !important;
+    background-color: #fff !important;
+}
+
+input.form-control:focus {
+    border-color: var(--main-blue) !important;
+    box-shadow: 0 0 0 3px rgba(0, 97, 255, 0.1) !important;
+}
+
+
+a.btn-add,
+a.btn-primary-electric,
+.sidebar a,
+header a {
+    text-decoration: none !important;
+}
+
+
+a.btn-add:hover,
+a.btn-primary-electric:hover {
+    text-decoration: none !important;
+    color: white !important;
+}
+
+
+.d-flex a {
+    text-decoration: none !important;
+}
